@@ -49,4 +49,46 @@ module.exports = {
             });
         });
 	},
+    addLabel(author,dynasty,profile,callback){
+        var sql = 'SELECT * FROM '+OPLABEL_TABLE+' WHERE author = ? LIMIT 1';
+        pool.getConnection(function(err, connection) {
+            connection.query(sql, author, function(err, result) {
+                if(err){
+                    callback(err, result)
+                    connection.release();
+                }else{
+                    if(result.length <= 0){
+                        var time = utils.getTime();
+                        sql = 'INSERT INTO '+OPLABEL_TABLE+' (author,dynasty,profile,time) VALUES (?,?,?,?)';
+                        connection.query(sql, [author,dynasty,profile,time], function(err, result) {
+                            if(err){
+                                callback(err, null)
+                            }else{
+                                // result.insertId
+                                callback(null, 'id:'+result.insertId+' author:'+author)
+                            }
+                            connection.release();
+                        });
+                    }else{
+                        callback('作者已存在', null)
+                        connection.release();
+                    }
+                }
+            });
+        });
+    },
+    upLabelProfile(author,profile,callback){
+        var sql = 'UPDATE '+OPLABEL_TABLE+' SET profile = ? WHERE author = ? ';
+        pool.getConnection(function(err, connection) {
+            connection.query(sql, [profile,author], function(err, result) {
+                if(err){
+                    callback(err, null)
+                }else{
+                    // result.insertId
+                    callback(null,'更新作者为:'+author)
+                }
+                connection.release();
+            });
+        });
+    }
 }
